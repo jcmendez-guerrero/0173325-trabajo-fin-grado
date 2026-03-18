@@ -1,0 +1,250 @@
+! Configuración de red generada parcialmente por OpenAI (2026) supervisada y modificada por el autor y validada a través de herramientas de simulación de red. 
+version 17.12.1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname madswcore01
+!
+no profinet
+!
+no ip cef
+no ipv6 cef
+!
+ptp clock transparent domain 0 profile default
+license boot level ipbasek9
+!
+vtp mode transparent
+!
+vlan 10
+ name MANAGEMENT
+!
+vlan 20
+ name MOBILE
+!
+vlan 30
+ name OFFICE
+!
+vlan 40
+ name DMZ
+!
+vlan 45
+ name DMZ_NP
+!
+vlan 50
+ name SERVERS_NP
+!
+vlan 51
+ name SERVERS_K8S
+!
+vlan 52
+ name K8SPODS
+!
+vlan 53
+ name K8SSERVICES
+!
+vlan 55
+ name SERVERS_PROD
+!
+vlan 60
+ name SAN
+!
+spanning-tree mode pvst
+spanning-tree vlan 10,20,30,40,45,50,51,52,53,55,60 root primary
+spanning-tree portfast default
+spanning-tree bpduguard default
+!
+interface Port-channel1
+ description LACP_HA_TO_SWITCH2
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,45,50,51,52,53,55,60
+ switchport nonegotiate
+!
+interface GigabitEthernet1/0/1
+ description FIREWALL_1_TRUNK_ALL_VLANS
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,45,50,51,52,53,55,60
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/2
+ description FIREWALL_2_TRUNK_ALL_VLANS
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,45,50,51,52,53,55,60
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/3
+ description ACCESS_POINT_1_TRUNK_VLAN20_30
+ switchport mode trunk
+ switchport trunk native vlan 20
+ switchport trunk allowed vlan 20,30
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/4
+ description ACCESS_POINT_2_TRUNK_VLAN20_30
+ switchport mode trunk
+ switchport trunk native vlan 20
+ switchport trunk allowed vlan 20,30
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/5
+ description ACCESS_POINT_3_TRUNK_VLAN20_30
+ switchport mode trunk
+ switchport trunk native vlan 20
+ switchport trunk allowed vlan 20,30
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/6
+ description ACCESS_POINT_4_TRUNK_VLAN20_30
+ switchport mode trunk
+ switchport trunk native vlan 20
+ switchport trunk allowed vlan 20,30
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/7
+ description ACCESS_POINT_5_TRUNK_VLAN20_30
+ switchport mode trunk
+ switchport trunk native vlan 20
+ switchport trunk allowed vlan 20,30
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/8
+ description DESKTOP_1_ACCESS_VLAN30
+ switchport mode access
+ switchport access vlan 30
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/9
+ description DESKTOP_2_ACCESS_VLAN30
+ switchport mode access
+ switchport access vlan 30
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/10
+ description HPC_SERVER_1_TRUNK_EXCEPT_20_30
+ switchport mode trunk
+ switchport trunk allowed vlan 10,40,45,50,51,52,53,55,60
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/11
+ description HPC_SERVER_2_TRUNK_EXCEPT_20_30
+ switchport mode trunk
+ switchport trunk allowed vlan 10,40,45,50,51,52,53,55,60
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/12
+ description K8S_SERVER_1_TRUNK_EXCEPT_20_30
+ switchport mode trunk
+ switchport trunk allowed vlan 10,40,45,50,51,52,53,55,60
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/13
+ description K8S_SERVER_2_TRUNK_EXCEPT_20_30
+ switchport mode trunk
+ switchport trunk allowed vlan 10,40,45,50,51,52,53,55,60
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/14
+ description K8S_SERVER_3_TRUNK_EXCEPT_20_30
+ switchport mode trunk
+ switchport trunk allowed vlan 10,40,45,50,51,52,53,55,60
+ switchport nonegotiate
+ spanning-tree portfast trunk
+!
+interface GigabitEthernet1/0/15
+ description RESERVED_FUTURE_USE
+ shutdown
+!
+interface GigabitEthernet1/0/16
+ description RESERVED_FUTURE_USE
+ shutdown
+!
+interface GigabitEthernet1/0/17
+ description RESERVED_FUTURE_USE
+ shutdown
+!
+interface GigabitEthernet1/0/18
+ description RESERVED_FUTURE_USE
+ shutdown
+!
+interface GigabitEthernet1/0/19
+ description RESERVED_FUTURE_USE
+ shutdown
+!
+interface GigabitEthernet1/0/20
+ description RESERVED_FUTURE_USE
+ shutdown
+!
+interface GigabitEthernet1/0/21
+ description RESERVED_FUTURE_USE
+ shutdown
+!
+interface GigabitEthernet1/0/22
+ description RESERVED_FUTURE_USE
+ shutdown
+!
+interface GigabitEthernet1/0/23
+ description RESERVED_FUTURE_USE
+ shutdown
+!
+interface GigabitEthernet1/0/24
+ description RESERVED_FUTURE_USE
+ shutdown
+!
+interface GigabitEthernet1/0/25
+ description LACP_TO_SWITCH2_MEMBER1
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,45,50,51,52,53,55,60
+ switchport nonegotiate
+ channel-group 1 mode active
+!
+interface GigabitEthernet1/0/26
+ description LACP_TO_SWITCH2_MEMBER2
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,45,50,51,52,53,55,60
+ switchport nonegotiate
+ channel-group 1 mode active
+!
+interface GigabitEthernet1/0/27
+ description RESERVED_UPLINK_OR_EXPANSION
+ shutdown
+!
+interface GigabitEthernet1/0/28
+ description RESERVED_UPLINK_OR_EXPANSION
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan10
+ description SWITCH1_MANAGEMENT
+ ip address 10.0.0.2 255.255.255.0
+ no shutdown
+!
+ip default-gateway 10.0.0.1
+ip classless
+!
+ip flow-export version 9
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+ transport input ssh
+!
+end
