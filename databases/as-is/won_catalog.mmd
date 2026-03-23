@@ -1,0 +1,104 @@
+---
+config:
+  look: neo
+  theme: redux-color
+title: Wizzars of Madrid Catalog Database
+---
+erDiagram
+	direction TB
+	GAMES {
+		int game_id PK ""  
+		string name  ""  
+		string publisher  ""  
+	}
+
+	EDITIONS {
+		int edition_id PK ""  
+		int game_id FK ""  
+		string code  ""  
+		string name  ""  
+		date release_date  ""  
+	}
+
+	CARDS {
+		uuid card_id PK ""  
+		int edition_id FK ""  
+		int language_id FK ""  
+		int rarity_id FK ""  
+		string name  ""  
+		string collector_number  ""  
+		string card_type  ""  
+		boolean foil  ""  
+		string condition  ""  
+	}
+
+	CARD_FACES {
+		uuid face_id PK ""  
+		uuid card_id FK ""  
+		string face_name  ""  
+		string mana_cost  ""  
+		string oracle  ""  
+		int power  ""  
+		int toughness  ""  
+	}
+
+	CARD_IMAGES {
+		uuid image_id PK ""  
+		uuid card_id FK ""  
+		string image_url  ""  
+		string image_type  ""  
+	}
+
+	CARD_PRICES_REFERENCE {
+		uuid ref_price_id PK ""  
+		uuid card_id FK ""  
+		decimal avg_price  ""  
+		decimal low_price  ""  
+		decimal trend_price  ""  
+		timestamp collected_at  ""  
+		string market_source  ""  
+	}
+
+	LEGALITIES {
+		uuid legality_id PK ""  
+		uuid card_id FK ""  
+		string format  ""  
+		string legality_status  ""  
+	}
+
+	LANGUAGES {
+		int language_id PK ""  
+		string code  ""  
+		string name  ""  
+	}
+
+	RARITIES {
+		int rarity_id PK ""  
+		string code  ""  
+		string name  ""  
+	}
+
+	CARD_IMPORT_JOBS {
+		uuid import_job_id PK ""  
+		string source  ""  
+		timestamp started_at  ""  
+		timestamp finished_at  ""  
+		string status  ""  
+	}
+
+	CARD_IMPORT_ERRORS {
+		uuid error_id PK ""  
+		uuid import_job_id FK ""  
+		string error_type  ""  
+		string error_message  ""  
+	}
+
+	GAMES||--o{EDITIONS:"contains"
+	EDITIONS||--o{CARDS:"groups"
+	CARDS||--o{CARD_FACES:"has"
+	CARDS||--o{CARD_IMAGES:"has"
+	CARDS||--o{CARD_PRICES_REFERENCE:"tracks"
+	CARDS||--o{LEGALITIES:"has"
+	LANGUAGES||--o{CARDS:"classifies"
+	RARITIES||--o{CARDS:"classifies"
+	CARD_IMPORT_JOBS||--o{CARD_IMPORT_ERRORS:"produces"
