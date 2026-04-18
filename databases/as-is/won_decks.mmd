@@ -1,0 +1,98 @@
+---
+config:
+  look: neo
+  theme: redux-color
+title: Wizzars of Madrid Decks Database
+---
+erDiagram
+    USERS_REF ||--o{ COLLECTIONS : owns
+    COLLECTIONS ||--o{ COLLECTION_CARDS : contains
+    CARDS_REF ||--o{ COLLECTION_CARDS : references
+    USERS_REF ||--o{ DECKS : owns
+    DECKS ||--o{ DECK_CARDS : contains
+    CARDS_REF ||--o{ DECK_CARDS : references
+    DECK_FORMATS ||--o{ DECKS : classifies
+    DECKS ||--o{ DECK_TAGS : labeled_with
+    DECKS ||--o{ SHARED_DECKS : shared_as
+    DECKS ||--o{ DECK_VERSIONS : versions
+    USERS_REF ||--o{ IMPORT_LISTS : imports
+
+    USERS_REF {
+        uuid user_id PK
+        string display_name
+        string region
+    }
+
+    CARDS_REF {
+        uuid card_id PK
+        string card_name
+        string edition_code
+    }
+
+    COLLECTIONS {
+        uuid collection_id PK
+        uuid user_id FK
+        string visibility
+        timestamp created_at
+    }
+
+    COLLECTION_CARDS {
+        uuid collection_card_id PK
+        uuid collection_id FK
+        uuid card_id FK
+        int quantity
+        string condition
+        boolean foil
+    }
+
+    DECK_FORMATS {
+        int format_id PK
+        string format_name
+        string game
+    }
+
+    DECKS {
+        uuid deck_id PK
+        uuid user_id FK
+        int format_id FK
+        string deck_name
+        string visibility
+        timestamp created_at
+    }
+
+    DECK_CARDS {
+        uuid deck_card_id PK
+        uuid deck_id FK
+        uuid card_id FK
+        int quantity
+        string zone
+    }
+
+    DECK_TAGS {
+        uuid tag_id PK
+        uuid deck_id FK
+        string tag_name
+    }
+
+    SHARED_DECKS {
+        uuid shared_deck_id PK
+        uuid deck_id FK
+        string public_slug
+        timestamp shared_at
+    }
+
+    DECK_VERSIONS {
+        uuid version_id PK
+        uuid deck_id FK
+        int version_number
+        timestamp created_at
+        string change_summary
+    }
+
+    IMPORT_LISTS {
+        uuid import_id PK
+        uuid user_id FK
+        string source
+        timestamp imported_at
+        string status
+    }

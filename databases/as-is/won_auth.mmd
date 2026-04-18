@@ -1,0 +1,136 @@
+---
+config:
+  look: neo
+  theme: redux-color
+title: Wizzars of Madrid Auth Database
+---
+erDiagram
+    USERS ||--o{ USER_ROLES : has
+    ROLES ||--o{ USER_ROLES : assigned_to
+    ROLES ||--o{ ROLE_PERMISSIONS : grants
+    PERMISSIONS ||--o{ ROLE_PERMISSIONS : linked_to
+    USERS ||--o{ USER_SESSIONS : opens
+    USERS ||--o{ REFRESH_TOKENS : owns
+    USERS ||--o{ LOGIN_EVENTS : generates
+    USERS ||--o{ MFA_EVENTS : generates
+    USERS ||--o{ PASSWORD_RESET_EVENTS : generates
+    USERS ||--o{ USER_FEDERATION_LINKS : federated_by
+    IDENTITY_PROVIDERS ||--o{ USER_FEDERATION_LINKS : manages
+    API_CLIENTS ||--o{ ADMIN_ACCESS_EVENTS : may_trigger
+    SERVICE_ACCOUNTS ||--o{ ADMIN_ACCESS_EVENTS : may_trigger
+
+    USERS {
+        uuid user_id PK
+        string email
+        string username
+        string password_hash
+        boolean enabled
+        boolean mfa_enabled
+        timestamp created_at
+    }
+
+    ROLES {
+        uuid role_id PK
+        string role_name
+        string description
+    }
+
+    PERMISSIONS {
+        uuid permission_id PK
+        string permission_name
+        string description
+    }
+
+    USER_ROLES {
+        uuid user_role_id PK
+        uuid user_id FK
+        uuid role_id FK
+        timestamp assigned_at
+    }
+
+    ROLE_PERMISSIONS {
+        uuid role_permission_id PK
+        uuid role_id FK
+        uuid permission_id FK
+    }
+
+    API_CLIENTS {
+        uuid api_client_id PK
+        string client_name
+        string client_type
+        boolean active
+    }
+
+    SERVICE_ACCOUNTS {
+        uuid service_account_id PK
+        string service_name
+        string account_name
+        boolean active
+    }
+
+    IDENTITY_PROVIDERS {
+        uuid idp_id PK
+        string provider_name
+        string provider_type
+        string issuer_url
+        boolean active
+    }
+
+    USER_FEDERATION_LINKS {
+        uuid federation_link_id PK
+        uuid user_id FK
+        uuid idp_id FK
+        string external_subject
+        timestamp linked_at
+    }
+
+    USER_SESSIONS {
+        uuid session_id PK
+        uuid user_id FK
+        string source_ip
+        string user_agent
+        timestamp created_at
+        timestamp expires_at
+    }
+
+    REFRESH_TOKENS {
+        uuid refresh_token_id PK
+        uuid user_id FK
+        string token_hash
+        timestamp issued_at
+        timestamp expires_at
+        boolean revoked
+    }
+
+    LOGIN_EVENTS {
+        uuid login_event_id PK
+        uuid user_id FK
+        string source_ip
+        boolean success
+        string failure_reason
+        timestamp event_time
+    }
+
+    MFA_EVENTS {
+        uuid mfa_event_id PK
+        uuid user_id FK
+        string event_type
+        string source_ip
+        timestamp event_time
+    }
+
+    PASSWORD_RESET_EVENTS {
+        uuid reset_event_id PK
+        uuid user_id FK
+        string event_type
+        timestamp event_time
+    }
+
+    ADMIN_ACCESS_EVENTS {
+        uuid admin_event_id PK
+        string actor_type
+        string actor_id
+        string action
+        string target_resource
+        timestamp event_time
+    }

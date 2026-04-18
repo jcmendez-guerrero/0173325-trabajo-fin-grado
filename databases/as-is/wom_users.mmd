@@ -1,0 +1,187 @@
+---
+config:
+  look: neo
+  theme: redux-color
+title: Wizzars of Madrid Customers Database
+---
+erDiagram
+    CUSTOMERS ||--o| INDIVIDUAL_PROFILES : has
+    CUSTOMERS ||--o| BUSINESS_PROFILES : has
+    CUSTOMERS ||--o{ CONTACT_POINTS : owns
+    CUSTOMERS ||--o{ ADDRESSES : owns
+    CUSTOMERS ||--o{ CUSTOMER_CONSENTS : grants
+    CUSTOMERS ||--o{ CUSTOMER_PREFERENCES : defines
+    CUSTOMERS ||--o{ CUSTOMER_SEGMENTS : assigned
+    CUSTOMERS ||--o| BUYER_PROFILES : may_have
+    CUSTOMERS ||--o| SELLER_PROFILES : may_have
+    CUSTOMERS ||--o{ CUSTOMER_PAYMENT_PROFILES : uses
+    CUSTOMERS ||--o| LOYALTY_ACCOUNTS : owns
+    LOYALTY_ACCOUNTS ||--o{ LOYALTY_TRANSACTIONS : registers
+    SELLER_PROFILES ||--o{ SELLER_PAYOUT_ACCOUNTS : receives
+    SELLER_PROFILES ||--o{ SELLER_STORE_LINKS : linked_to
+    CUSTOMERS ||--o{ CUSTOMER_EVENTS : generates
+
+    CUSTOMERS {
+        uuid customer_id PK
+        uuid auth_user_id
+        string customer_type
+        string customer_status
+        string display_name
+        string primary_email
+        string primary_phone
+        string default_language
+        string region_code
+        string country_code
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    INDIVIDUAL_PROFILES {
+        uuid individual_profile_id PK
+        uuid customer_id FK
+        string first_name
+        string last_name
+        date birth_date
+        string government_id_type
+        string government_id_masked
+    }
+
+    BUSINESS_PROFILES {
+        uuid business_profile_id PK
+        uuid customer_id FK
+        string legal_name
+        string trade_name
+        string vat_number
+        string tax_residency_country
+        string registration_number
+        string contact_person_name
+    }
+
+    CONTACT_POINTS {
+        uuid contact_point_id PK
+        uuid customer_id FK
+        string contact_type
+        string contact_value
+        boolean is_primary
+        boolean is_verified
+    }
+
+    ADDRESSES {
+        uuid address_id PK
+        uuid customer_id FK
+        string address_type
+        string line_1
+        string line_2
+        string city
+        string postal_code
+        string state_region
+        string country_code
+        boolean is_default
+    }
+
+    CUSTOMER_CONSENTS {
+        uuid consent_id PK
+        uuid customer_id FK
+        string consent_type
+        string consent_status
+        string consent_source
+        timestamp granted_at
+        timestamp revoked_at
+    }
+
+    CUSTOMER_PREFERENCES {
+        uuid preference_id PK
+        uuid customer_id FK
+        string preferred_currency
+        string preferred_language
+        string preferred_shipping_country
+        boolean wants_price_alerts
+        boolean wants_restock_alerts
+        boolean wants_marketing
+    }
+
+    CUSTOMER_SEGMENTS {
+        uuid segment_id PK
+        uuid customer_id FK
+        string segment_name
+        timestamp assigned_at
+        string assigned_by
+    }
+
+    BUYER_PROFILES {
+        uuid buyer_profile_id PK
+        uuid customer_id FK
+        string buyer_status
+        decimal marketplace_rating
+        int total_orders
+        decimal total_spend
+        string fraud_risk_level
+    }
+
+    SELLER_PROFILES {
+        uuid seller_profile_id PK
+        uuid customer_id FK
+        string seller_type
+        string seller_status
+        string store_name
+        string public_slug
+        decimal marketplace_rating
+        int total_sales
+        string payout_currency
+    }
+
+    SELLER_PAYOUT_ACCOUNTS {
+        uuid payout_account_id PK
+        uuid seller_profile_id FK
+        string provider_name
+        string provider_account_ref
+        string account_status
+        boolean is_default
+    }
+
+    SELLER_STORE_LINKS {
+        uuid seller_store_link_id PK
+        uuid seller_profile_id FK
+        bigint store_id
+        string relationship_type
+        boolean active
+    }
+
+    CUSTOMER_PAYMENT_PROFILES {
+        uuid payment_profile_id PK
+        uuid customer_id FK
+        string provider_name
+        string provider_token_ref
+        string brand
+        string last4
+        int expiry_month
+        int expiry_year
+        boolean is_default
+    }
+
+    LOYALTY_ACCOUNTS {
+        uuid loyalty_account_id PK
+        uuid customer_id FK
+        string loyalty_number
+        string status
+        int points_balance
+        string tier_name
+    }
+
+    LOYALTY_TRANSACTIONS {
+        uuid loyalty_tx_id PK
+        uuid loyalty_account_id FK
+        string transaction_type
+        int points_delta
+        string source_ref
+        timestamp created_at
+    }
+
+    CUSTOMER_EVENTS {
+        uuid customer_event_id PK
+        uuid customer_id FK
+        string event_type
+        string actor_ref
+        string event_payload
+        timestamp created_at
+    }

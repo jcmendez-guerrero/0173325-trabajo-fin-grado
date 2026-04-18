@@ -1,0 +1,80 @@
+---
+config:
+  look: neo
+  theme: redux-color
+title: Wizzars of Madrid Reporting Database
+---
+erDiagram
+    DIM_DATE ||--o{ FACT_SALES : groups
+    DIM_STORE ||--o{ FACT_SALES : occurs_in
+    DIM_CARD ||--o{ FACT_SALES : references
+    DIM_CUSTOMER ||--o{ FACT_SALES : sold_to
+    DIM_DATE ||--o{ FACT_MARKETPLACE_ORDERS : groups
+    DIM_CUSTOMER ||--o{ FACT_MARKETPLACE_ORDERS : places
+    DIM_CARD ||--o{ FACT_MARKETPLACE_ORDERS : includes
+    DIM_DATE ||--o{ FACT_AUTH_ACTIVITY : groups
+    DIM_USER ||--o{ FACT_AUTH_ACTIVITY : performs
+
+    DIM_DATE {
+        int date_id PK
+        date full_date
+        int year
+        int month
+        int day
+    }
+
+    DIM_STORE {
+        int store_id PK
+        string store_name
+        string city
+        string country
+    }
+
+    DIM_CARD {
+        uuid card_id PK
+        string card_name
+        string edition_code
+        string rarity
+        string game
+    }
+
+    DIM_CUSTOMER {
+        uuid customer_id PK
+        string region
+        string segment
+    }
+
+    DIM_USER {
+        uuid user_id PK
+        string region
+        string auth_type
+    }
+
+    FACT_SALES {
+        uuid sale_fact_id PK
+        int date_id FK
+        int store_id FK
+        uuid card_id FK
+        uuid customer_id FK
+        int quantity
+        decimal total_amount
+    }
+
+    FACT_MARKETPLACE_ORDERS {
+        uuid order_fact_id PK
+        int date_id FK
+        uuid customer_id FK
+        uuid card_id FK
+        int quantity
+        decimal total_amount
+        decimal shipping_amount
+    }
+
+    FACT_AUTH_ACTIVITY {
+        uuid auth_fact_id PK
+        int date_id FK
+        uuid user_id FK
+        int login_count
+        int mfa_count
+        int failed_login_count
+    }

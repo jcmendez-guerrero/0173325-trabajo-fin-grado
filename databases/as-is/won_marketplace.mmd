@@ -1,0 +1,129 @@
+---
+config:
+  look: neo
+  theme: redux-color
+title: Wizzars of Madrid Marketplace Database
+---
+erDiagram
+    SELLERS ||--o{ LISTINGS : publishes
+    CUSTOMERS ||--o{ CARTS : owns
+    CARTS ||--o{ CART_ITEMS : contains
+    LISTINGS ||--o{ CART_ITEMS : added_to
+    CUSTOMERS ||--o{ ORDERS : places
+    ORDERS ||--o{ ORDER_ITEMS : includes
+    LISTINGS ||--o{ ORDER_ITEMS : purchased_from
+    ORDERS ||--o{ PAYMENTS : has
+    ORDERS ||--o{ REFUNDS : may_have
+    ORDERS ||--o{ SHIPMENTS : generates
+    SHIPMENTS ||--o{ TRACKING_EVENTS : updates
+    CUSTOMERS ||--o{ REVIEWS : writes
+    SELLERS ||--o{ REVIEWS : receives
+    ORDERS ||--o{ DISPUTES : may_generate
+
+    SELLERS {
+        uuid seller_id PK
+        string display_name
+        string country
+        string seller_status
+        timestamp created_at
+    }
+
+    CUSTOMERS {
+        uuid customer_id PK
+        string email
+        string display_name
+        string region
+        timestamp created_at
+    }
+
+    LISTINGS {
+        uuid listing_id PK
+        uuid seller_id FK
+        uuid card_id
+        decimal price
+        int quantity
+        string currency
+        string listing_status
+    }
+
+    CARTS {
+        uuid cart_id PK
+        uuid customer_id FK
+        timestamp created_at
+        string status
+    }
+
+    CART_ITEMS {
+        uuid cart_item_id PK
+        uuid cart_id FK
+        uuid listing_id FK
+        int quantity
+    }
+
+    ORDERS {
+        uuid order_id PK
+        uuid customer_id FK
+        timestamp order_date
+        string status
+        decimal total_amount
+        string currency
+    }
+
+    ORDER_ITEMS {
+        uuid order_item_id PK
+        uuid order_id FK
+        uuid listing_id FK
+        int quantity
+        decimal unit_price
+    }
+
+    PAYMENTS {
+        uuid payment_id PK
+        uuid order_id FK
+        string provider
+        string payment_status
+        decimal amount
+        timestamp paid_at
+    }
+
+    REFUNDS {
+        uuid refund_id PK
+        uuid order_id FK
+        decimal amount
+        string reason
+        string refund_status
+        timestamp refunded_at
+    }
+
+    SHIPMENTS {
+        uuid shipment_id PK
+        uuid order_id FK
+        string carrier
+        string tracking_number
+        string shipment_status
+    }
+
+    TRACKING_EVENTS {
+        uuid tracking_event_id PK
+        uuid shipment_id FK
+        string event_type
+        string location
+        timestamp event_time
+    }
+
+    REVIEWS {
+        uuid review_id PK
+        uuid customer_id FK
+        uuid seller_id FK
+        int rating
+        string review_text
+        timestamp created_at
+    }
+
+    DISPUTES {
+        uuid dispute_id PK
+        uuid order_id FK
+        string dispute_type
+        string status
+        string resolution_notes
+    }

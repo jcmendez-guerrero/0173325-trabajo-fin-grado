@@ -1,0 +1,62 @@
+---
+config:
+  look: neo
+  theme: redux-color
+title: Wizzars of Madrid Notifications Database
+---
+erDiagram
+    USERS_REF ||--o{ NOTIFICATION_PREFERENCES : configures
+    NOTIFICATION_TEMPLATES ||--o{ NOTIFICATION_MESSAGES : renders
+    USERS_REF ||--o{ NOTIFICATION_MESSAGES : receives
+    NOTIFICATION_MESSAGES ||--o{ DELIVERY_EVENTS : generates
+    NOTIFICATION_CAMPAIGNS ||--o{ NOTIFICATION_MESSAGES : sends
+
+    USERS_REF {
+        uuid user_id PK
+        string email
+        string locale
+    }
+
+    NOTIFICATION_PREFERENCES {
+        uuid preference_id PK
+        uuid user_id FK
+        boolean email_enabled
+        boolean push_enabled
+        boolean sms_enabled
+        boolean marketplace_alerts
+    }
+
+    NOTIFICATION_TEMPLATES {
+        uuid template_id PK
+        string template_name
+        string channel
+        string locale
+        string template_version
+    }
+
+    NOTIFICATION_CAMPAIGNS {
+        uuid campaign_id PK
+        string campaign_name
+        string channel
+        timestamp created_at
+        string status
+    }
+
+    NOTIFICATION_MESSAGES {
+        uuid message_id PK
+        uuid user_id FK
+        uuid template_id FK
+        uuid campaign_id FK
+        string channel
+        string message_status
+        timestamp created_at
+    }
+
+    DELIVERY_EVENTS {
+        uuid delivery_event_id PK
+        uuid message_id FK
+        string provider
+        string event_type
+        timestamp event_time
+        string provider_reference
+    }

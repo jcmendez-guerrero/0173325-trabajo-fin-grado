@@ -1,0 +1,117 @@
+---
+config:
+  look: neo
+  theme: redux-color
+title: Wizzars of Madrid Inventory Database
+---
+erDiagram
+    STORES ||--o{ STOCK_ITEMS : contains
+    CARDS_REF ||--o{ STOCK_ITEMS : identifies
+    STOCK_ITEMS ||--o{ STOCK_MOVEMENTS : generates
+    STOCK_ITEMS ||--o{ STOCK_RESERVATIONS : reserves
+    SUPPLIERS ||--o{ PURCHASE_ORDERS : receives
+    PURCHASE_ORDERS ||--o{ PURCHASE_ORDER_LINES : contains
+    CARDS_REF ||--o{ PURCHASE_ORDER_LINES : references
+    STORES ||--o{ POS_SALES : registers
+    POS_SALES ||--o{ POS_SALE_LINES : includes
+    CARDS_REF ||--o{ POS_SALE_LINES : sold
+    STOCK_ITEMS ||--o{ INVENTORY_ADJUSTMENTS : adjusted
+    STOCK_ITEMS ||--o{ GRADING_ENTRIES : graded
+
+    STORES {
+        int store_id PK
+        string store_name
+        string country
+        string city
+    }
+
+    CARDS_REF {
+        uuid card_id PK
+        string card_name
+        string edition_code
+    }
+
+    STOCK_ITEMS {
+        uuid stock_item_id PK
+        int store_id FK
+        uuid card_id FK
+        int quantity
+        int reserved_qty
+        decimal sale_price
+        string condition
+        boolean foil
+    }
+
+    STOCK_MOVEMENTS {
+        uuid movement_id PK
+        uuid stock_item_id FK
+        string movement_type
+        int qty
+        string source_ref
+        timestamp created_at
+    }
+
+    STOCK_RESERVATIONS {
+        uuid reservation_id PK
+        uuid stock_item_id FK
+        string reservation_source
+        int qty_reserved
+        timestamp created_at
+        string status
+    }
+
+    SUPPLIERS {
+        uuid supplier_id PK
+        string supplier_name
+        string contact_email
+        string country
+    }
+
+    PURCHASE_ORDERS {
+        uuid po_id PK
+        uuid supplier_id FK
+        timestamp created_at
+        string status
+        decimal total_amount
+    }
+
+    PURCHASE_ORDER_LINES {
+        uuid po_line_id PK
+        uuid po_id FK
+        uuid card_id FK
+        int qty
+        decimal unit_cost
+    }
+
+    POS_SALES {
+        uuid pos_sale_id PK
+        int store_id FK
+        timestamp sale_time
+        decimal total_amount
+        string payment_method
+    }
+
+    POS_SALE_LINES {
+        uuid sale_line_id PK
+        uuid pos_sale_id FK
+        uuid card_id FK
+        int qty
+        decimal unit_price
+    }
+
+    INVENTORY_ADJUSTMENTS {
+        uuid adjustment_id PK
+        uuid stock_item_id FK
+        int old_qty
+        int new_qty
+        string reason
+        timestamp adjusted_at
+    }
+
+    GRADING_ENTRIES {
+        uuid grading_id PK
+        uuid stock_item_id FK
+        string grading_provider
+        string grade_value
+        timestamp graded_at
+    }
