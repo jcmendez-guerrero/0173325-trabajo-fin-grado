@@ -1,0 +1,80 @@
+@startuml 01-organization-architecture
+title AWS Organization Architecture - Wizzard's of the Coast
+' C4
+!define C4Puml  https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master
+'Icons
+!define ICONURL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/v3.0.0/icons
+'AWS
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v23.0/dist
+
+
+
+!includeurl C4Puml/C4_Component.puml
+
+!include AWSPuml/AWSCommon.puml
+!include AWSPuml/AWSC4Integration.puml
+
+
+!include AWSPuml/ManagementGovernance/all.puml
+!include AWSPuml/Groups/AWSCloud.puml
+!include AWSPuml/Groups/AWSAccount.puml
+$AWSGroupColoring(AWSOUGroup, "#E7157B", plain, left)
+$AWSGroupColoring(AWSOrg, "#E7157B", plain, left)
+$AWSGroupColoring(AWSAcc, "#E7157B", plain, left)
+
+!define AWSOUGroup(g_alias, g_label="AWS Organization Unit") $AWSDefineGroup(g_alias, g_label, OrganizationsOrganizationalUnit, AWSOUGroup)
+!define AWSOrg(g_alias, g_label="AWS Organizations") $AWSDefineGroup(g_alias, g_label, Organizations, AWSOrg)
+!define AWSAcc(g_alias, g_label="AWS Master Account") $AWSDefineGroup(g_alias, g_label, OrganizationsAccount, AWSAcc)
+
+legend right
+    __Legend__
+
+    |Element | description |
+    | <img:AWSPuml/Groups/AWSCloud.png> | AWS Cloud |
+    | <img:AWSPuml/ManagementGovernance/OrganizationsAccount.png> | AWS Account |
+    | <img:AWSPuml/ManagementGovernance/ControlTower.png> | AWS Control Tower |
+    | <img:AWSPuml/ManagementGovernance/Organizations.png> | AWS Organizations |
+endlegend
+
+
+AWSCloudGroup(cloud) {
+    AWSAcc(masteracccount, "aws-acc-master-wom-01\nAWS Organizations Management Master Account") {
+        Organizations(org, "aws-org-wom", "AWS Organization", "Wizzard's of the Coast AWS Organization")
+        ControlTower(controltower, "aws-ct-wom-eu-01", "AWS Control Tower", "Wizzard's of the Coast AWS Control Tower (eu-south-2)")
+    }
+    AWSOrg(orgcopy, "aws-org-wom\nAWS Organization\nWizzard's of the Coast AWS Organization") {
+        AWSOUGroup(ou, "ou-security\nAWS Organization Unit\nWizzard's of the Coast AWS Organization Unit for Security") {
+            OrganizationsAccount(auditaccount, "aws-acc-audit-wom-shared-01", "AWS Account", "Wizzard's of the Coast AWS Account for Audit (created by Control Tower)")
+            OrganizationsAccount(identity, "aws-acc-identity-wom-shared-01", "AWS Account", "Wizzard's of the Coast AWS Account for Identity")
+            OrganizationsAccount(logarchiveaccount, "aws-acc-log-wom-shared-01", "AWS Account", "Wizzard's of the Coast AWS Account for Log and Archive (created by Control Tower)")
+        }
+        AWSOUGroup(infraou, "ou-infra\nAWS Organization Unit\nWizzard's of the Coast AWS Organization Unit for Infra foundational services") {
+            OrganizationsAccount(networkaccount, "aws-acc-net-wom-shared-01", "AWS Account", "Wizzard's of the Coast AWS Account for Network")
+            OrganizationsAccount(monitoring, "aws-acc-mon-wom-shared-01", "AWS Account", "Wizzard's of the Coast AWS Account for Monitoring")
+            OrganizationsAccount(management, "aws-acc-mgmt-wom-shared-01", "AWS Account", "Wizzard's of the Coast AWS Account for Management")
+        }
+        AWSOUGroup(applandzoneou, "ou-app-lz\nAWS Organization Unit\nWizzard's of the Coast AWS Organization Unit for App Landing Zone") {
+            AWSOUGroup(nonprodou, "ou-nonprod-lz\nAWS Organization Unit\nWizzard's of the Coast AWS Organization Unit for Non Prod Landing Zone") {
+                OrganizationsAccount(devaccount, "aws-acc-app-wom-dev-01", "AWS Account", "Wizzard's of the Coast AWS Account for Development")
+                OrganizationsAccount(testaccount, "aws-acc-app-wom-test-01", "AWS Account", "Wizzard's of the Coast AWS Account for Test")
+                OrganizationsAccount(dmznonprodaccount, "aws-acc-dmz-wom-nonprod-01", "AWS Account", "Wizzard's of the Coast AWS Account for DMZ Non Prod")
+            }
+            OrganizationsOrganizationalUnit(sandboxou, "ou-sbx-lz","AWS Organization Unit","Wizzard's of the Coast AWS Organization Unit for Sandbox (created by Control Tower)")
+            AWSOUGroup(prodou, "ou-prod-lz\nAWS Organization Unit\nWizzard's of the Coast AWS Organization Unit for Prod Landing Zone") {
+                OrganizationsAccount(preprodaccount, "aws-acc-app-wom-preprod-01", "AWS Account", "Wizzard's of the Coast AWS Account for Pre-Production")
+                OrganizationsAccount(prodaccount, "aws-acc-app-wom-prod-01", "AWS Account", "Wizzard's of the Coast AWS Account for Production")
+                OrganizationsAccount(dmzprodaccount, "aws-acc-dmz-wom-prod-01", "AWS Account", "Wizzard's of the Coast AWS Account for DMZ Prod")
+                OrganizationsAccount(dmzpreprodaccount, "aws-acc-dmz-wom-preprod-01", "AWS Account", "Wizzard's of the Coast AWS Account for DMZ Pre-Prod")
+            }
+        }
+        OrganizationsOrganizationalUnit(decommissionou, "ou-decommission","AWS Organization Unit","Wizzard's of the Coast AWS Organization Unit for Decommission")
+    }
+}
+
+Rel_R(controltower, org, "Manages and governs the AWS Organization and accounts")
+Rel(org, orgcopy, "", "", "", "" , "")
+
+
+
+
+@enduml
