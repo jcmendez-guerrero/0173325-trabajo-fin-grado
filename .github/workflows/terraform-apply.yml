@@ -7,9 +7,6 @@ on:
     paths:
       - "accounts/**"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
 permissions:
   contents: read
 
@@ -22,7 +19,7 @@ jobs:
       has_changes: ${{ steps.changed.outputs.has_changes }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 2
           persist-credentials: false
@@ -37,11 +34,11 @@ jobs:
             | jq -R . | jq -sc .)
 
           if [ "$FOLDERS" = "[]" ] || [ -z "$FOLDERS" ]; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "matrix=[]" >> $GITHUB_OUTPUT
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
           else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "matrix=$FOLDERS" >> "$GITHUB_OUTPUT"
           fi
 
   apply:
@@ -58,26 +55,28 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
       - name: Extract account ID from folder name
         id: account
         run: |
-          FOLDER_NAME=$(basename "${{ matrix.folder }}")
+          FOLDER_NAME=$(basename "${MATRIX_FOLDER}")
           ACCOUNT_ID=$(echo "$FOLDER_NAME" | cut -d'-' -f1)
-          echo "id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
-          echo "role_arn=arn:aws:iam::${ACCOUNT_ID}:role/platform/terraform-execution-role" >> $GITHUB_OUTPUT
+          echo "id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+          echo "role_arn=arn:aws:iam::${ACCOUNT_ID}:role/platform/terraform-execution-role" >> "$GITHUB_OUTPUT"
+        env:
+          MATRIX_FOLDER: ${{ matrix.folder }}
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6
         with:
           role-to-assume: ${{ steps.account.outputs.role_arn }}
           aws-region: eu-south-2
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
 
       - name: Terraform Init
         working-directory: ${{ matrix.folder }}
