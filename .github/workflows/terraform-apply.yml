@@ -77,7 +77,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ matrix.folder }}
-        run: terraform init -backend-config=backend.hcl -input=false
+        run: terraform init -input=false
 
       - name: Terraform Validate
         working-directory: ${{ matrix.folder }}
