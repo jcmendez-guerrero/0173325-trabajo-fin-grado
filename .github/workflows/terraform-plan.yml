@@ -1,0 +1,145 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "accounts/**"
+
+jobs:
+  detect:
+    name: Detect changed account folders
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.changed.outputs.matrix }}
+      has_changes: ${{ steps.changed.outputs.has_changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Find changed account folders
+        id: changed
+        run: |
+          FOLDERS=$(git diff --name-only origin/${GITHUB_BASE_REF}...HEAD \
+            | grep '^accounts/' \
+            | cut -d'/' -f1-2 \
+            | sort -u \
+            | jq -R . | jq -sc .)
+
+          if [ "$FOLDERS" = "[]" ] || [ -z "$FOLDERS" ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "matrix=[]" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
+          fi
+
+  plan:
+    name: Plan — ${{ matrix.folder }}
+    needs: detect
+    if: needs.detect.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        folder: ${{ fromJson(needs.detect.outputs.matrix) }}
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Extract account ID from folder name
+        id: account
+        run: |
+          FOLDER_NAME=$(basename "${MATRIX_FOLDER}")
+          ACCOUNT_ID=$(echo "$FOLDER_NAME" | cut -d'-' -f1)
+          echo "id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+          echo "role_arn=arn:aws:iam::${ACCOUNT_ID}:role/platform/terraform-execution-role" >> $GITHUB_OUTPUT
+        env:
+          MATRIX_FOLDER: ${{ matrix.folder }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.account.outputs.role_arn }}
+          aws-region: eu-south-2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.folder }}
+        run: terraform init -backend-config=backend.hcl -input=false
+
+      - name: Terraform Validate
+        working-directory: ${{ matrix.folder }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ matrix.folder }}
+        run: |
+          terraform plan -input=false -no-color -out=tfplan 2>&1 | tee plan_output.txt
+          echo "exitcode=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Post plan as PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('${{ matrix.folder }}/plan_output.txt', 'utf8');
+            const folder = '${{ matrix.folder }}';
+            const exitcode = '${{ steps.plan.outputs.exitcode }}';
+            const status = exitcode === '0' ? '✅ Success' : '❌ Failed';
+
+            const body = `### Terraform Plan — \`${folder}\` ${status}
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`terraform
+            ${output.length > 60000 ? output.slice(0, 60000) + '\n... (truncated)' : output}
+            \`\`\`
+
+            </details>
+
+            *Account ID: \`${{ steps.account.outputs.id }}\` | Role: \`${{ steps.account.outputs.role_arn }}\`*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const marker = `<!-- tf-plan-${folder} -->`;
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: marker + '\n' + body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: marker + '\n' + body,
+              });
+            }
+
+      - name: Fail if plan failed
+        if: steps.plan.outputs.exitcode != '0'
+        run: exit 1
+

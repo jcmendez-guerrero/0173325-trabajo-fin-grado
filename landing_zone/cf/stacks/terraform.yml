@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  pTerraformCicdRole:
+    Default: terraform-execution-role
+    Type: String
+    Description: The IAM Role name
+  pGitHubRepos:
+    Default: repo:jcmendez-guerrero/0173325-trabajo-fin-grado:ref:refs/heads/*,repo:jcmendez-guerrero/0173325-trabajo-fin-grado:pull_request,repo:jcmendez-guerrero/0173325-trabajo-fin-grado:environment:*
+    Type: String
+    Description: Comma-separated list of GitHub repository patterns to allow access to the role
+  pGitHubThumbprint:
+    Default: 6938fd4d98bab03faadb97b34396831e3780aea1
+    Type: String
+    Description: The GitHub SSL thumbprint to allow access to the role
+
+
+Resources:
+# El acceso no debería de ser público pero para poder habilitar S3 para poder usarlo en el proyecto sin necesidad de un selfhosted runner, vamos a dejarlo así
+  rTerraformStateBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub aws-wom-s3-terraform-${AWS::AccountId}-global-01
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Owner
+          Value: WoM Team
+        - Key: Environment
+          Value: Platform
+
+  rTerraformStateTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub aws-dynamodb-terraform-${AWS::AccountId}-eus2-01
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: LockID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: LockID
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/dynamodb
+      Tags:
+        - Key: Owner
+          Value: WoM Team
+        - Key: Environment
+          Value: Platform
+
+  rWorkloadTFExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref pTerraformCicdRole
+      Description: Role for the CICD pipeline via GitHub Actions
+      Path: /platform/
+      MaxSessionDuration: 7200
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals: 
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Split [',', !Ref pGitHubRepos]
+            Principal:
+              Federated:
+                Ref: rGitHubActionsOIDCProvider
+      Policies:
+        - PolicyName: terraform-execution-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+        - PolicyName: tf-state-management-inline
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowS3Access
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:List*
+                  - s3:GetBucket*
+                  - s3:GetEncryptionConfiguration
+                Resource:
+                  - !GetAtt rTerraformStateBucket.Arn
+                  - !Sub ${rTerraformStateBucket.Arn}/*
+              - Sid: AllowDeleteTFLockFiles
+                Effect: Allow
+                Action:
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub ${rTerraformStateBucket.Arn}/*/*.tflock
+              - Sid: AllowDDBAccesss
+                Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                Resource: !GetAtt rTerraformStateTable.Arn
+      Tags:
+        - Key: Owner
+          Value: WoM Team
+        - Key: Environment
+          Value: Platform
+  rGitHubActionsOIDCProvider:
+    Properties:
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - !Ref pGitHubThumbprint
+      Url: https://token.actions.githubusercontent.com
+    Type: AWS::IAM::OIDCProvider
+
+Outputs:
+  RoleArn:
+    Description: ARN of the created IAM Role
+    Value: !GetAtt rWorkloadTFExecutionRole.Arn
