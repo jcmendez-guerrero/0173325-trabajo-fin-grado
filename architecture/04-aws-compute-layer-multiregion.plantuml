@@ -101,6 +101,7 @@ AWSCloudGroup(aws_cloud, "AWS Cloud") {
                 AvailabilityZoneGroup(az_eu_a, "AZ eu-south-2a") {
                     EC2(ng_eu_a, "EKS Worker Nodes AZ-a", "m7i.2xlarge", "Kubernetes worker nodes") {
                         KubernetesIng(nginx_eu, "NGINX Ingress Controller", "controller-operator")
+                        KubernetesIng(alb_controller_eu, "ALB Ingress Controller", "controller-operator")
                         KubernetesSvc(svc_eu_a, "Kubernetes Services", "service")
                         KubernetesPod(pods_eu_a, "Microservices Pods AZ-a", "pod")
                         KubernetesSa(sa_eu, "Service Accounts", "serviceaccount")
@@ -134,6 +135,7 @@ AWSCloudGroup(aws_cloud, "AWS Cloud") {
                 AvailabilityZoneGroup(az_us_a, "AZ us-east-1a") {
                     EC2(ng_us_a, "EKS Worker Nodes AZ-a", "m7i.2xlarge", "Kubernetes worker nodes") {
                         KubernetesIng(nginx_us, "NGINX Ingress Controller", "controller-operator")
+                        KubernetesIng(alb_controller_us, "ALB Ingress Controller", "controller-operator")
                         KubernetesSvc(svc_us_a, "Kubernetes Services", "service")
                         KubernetesPod(pods_us_a, "Microservices Pods AZ-a", "pod")
                         KubernetesSa(sa_us, "Service Accounts", "serviceaccount")
@@ -153,7 +155,10 @@ AWSCloudGroup(aws_cloud, "AWS Cloud") {
 
 
 Rel(public, nlb_eu, "Forward traffic to discoverable NGINX endpoint", $tags="ingress")
+Rel(public, alb_controller_eu, "Route host/path ingress", $tags="ingress")
 Rel(nlb_eu, nginx_eu, "TCP/HTTP traffic to ingress controller", $tags="ingress")
+Rel(alb_controller_eu, svc_eu_a, "Route host/path", $tags="ingress")
+Rel(alb_controller_eu, svc_eu_b, "Route host/path", $tags="ingress")
 Rel(nginx_eu, svc_eu_a, "Route by host/path", $tags="k8s_internal")
 Rel(nginx_eu, svc_eu_b, "Route by host/path", $tags="k8s_internal")
 Rel(svc_eu_a, pods_eu_a, "Service-to-pod", $tags="k8s_internal")
@@ -167,7 +172,10 @@ Rel(pods_eu_a, persistence, "Secure data access (TLS)", $tags="data_flow")
 Rel(pods_eu_b, persistence, "Secure data access (TLS)", $tags="data_flow")
 
 Rel(public, nlb_us, "Forward traffic to discoverable NGINX endpoint", $tags="ingress")
+Rel(public, alb_controller_us, "Route host/path ingress", $tags="ingress")
 Rel(nlb_us, nginx_us, "TCP/HTTP traffic to ingress controller", $tags="ingress")
+Rel(alb_controller_us, svc_us_a, "Route host/path", $tags="ingress")
+Rel(alb_controller_us, svc_us_b, "Route host/path", $tags="ingress")
 Rel(nginx_us, svc_us_a, "Route by host/path", $tags="k8s_internal")
 Rel(nginx_us, svc_us_b, "Route by host/path", $tags="k8s_internal")
 Rel(svc_us_a, pods_us_a, "Service-to-pod", $tags="k8s_internal")
